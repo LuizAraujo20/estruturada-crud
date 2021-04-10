@@ -6,6 +6,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #define MAX 100
 
@@ -13,6 +14,8 @@
 int main(int argc, const char * argv[]) {
     int qtdProdutos = 0, indice, codigoEscolha;
     char opcao, flag;
+    int inicio, fim, meio;
+    
     struct {
         int codigo;
         char descricao[20];
@@ -70,84 +73,119 @@ int main(int argc, const char * argv[]) {
 //                break;
                 
             case '3':
-                //alterar
-                printf("\n\nALTERAR PRODUTO");
-                printf("\nINFORME O CODIGO DO PRODUTO: ");
-                scanf("%d", &codigoEscolha);
-                
-                //algoritmo pesquisa binária
-                int inicio = 0, fim = (qtdProdutos - 1);
-                int meio = (inicio + fim) / 2;
-                flag = 'o';
                 do{
-                    if(codigoEscolha == produtos[meio].codigo){
-                        flag = 'x';
-                    } else if(codigoEscolha < produtos[meio].codigo){
-                        inicio = 0;
-                        fim = meio - 1;
-                        meio = (inicio + fim) / 2;
-                    } else {
-                        inicio = meio + 1;
-                        fim = (qtdProdutos - 1);
-                        meio = (inicio + fim) / 2;
-                    }
-                }while((inicio <= fim) && (flag == 'o'));
-            
-                printf("\n\n%-6s  %-20s  %-12s", "Codigo", "Descricao", "Preco(R$)");
-                printf("\n%06d  %-20s  %9.2f", produtos[meio].codigo, produtos[meio].descricao, produtos[meio].valor);
-                
-                printf("\nMENU ALTERACAO PRODUTO");
-                printf("\n1 - ALTERAR CODIGO");
-                printf("\n2 - ALTERAR NOME DO PRODUTO");
-                printf("\n3 - ALTERAR PRECO");
-                printf("\n4 - ALTERAR TUDO");
-                printf("\n5 - ESCOLHER OUTRO PRODUTO");
-                printf("\n6 - SAIR DO MENU ALTERACAO");
-                printf("\nOPCAO: ");
-                fflush(stdin);
-                opcao = getchar();
-                
-                switch (opcao) {
-                    case '1':
-                    case '4':
-                        printf("\nNovo codigo: ");
-                        scanf("%d", &produtos[meio].codigo);
-                        break;
-                        
-                    case '2':
-                    case '4':
-                        
-                        printf("\nNova descricao: ");
+                    //alterar
+                    printf("\n\nALTERAR PRODUTO");
+                    printf("\nINFORME O CODIGO DO PRODUTO: ");
+                    scanf("%d", &codigoEscolha);
+                    
+                    //algoritmo pesquisa binária
+                    inicio = 0;
+                    fim = (qtdProdutos - 1);
+                    meio = (inicio + fim) / 2;
+                    flag = 'o';
+                    do{
+                        if(codigoEscolha == produtos[meio].codigo){
+                            flag = 'x';
+                        } else if(codigoEscolha < produtos[meio].codigo){
+                            inicio = 0;
+                            fim = meio - 1;
+                            meio = (inicio + fim) / 2;
+                        } else {
+                            inicio = meio + 1;
+                            fim = (qtdProdutos - 1);
+                            meio = (inicio + fim) / 2;
+                        }
+                    }while((inicio <= fim) && (flag == 'o'));
+                    
+                    if(flag == 'x'){
+                        printf("\n\n%-6s  %-20s  %-12s", "Codigo", "Descricao", "Preco(R$)");
+                        printf("\n%06d  %-20s  %9.2f", produtos[meio].codigo, produtos[meio].descricao, produtos[meio].valor);
+                    
+                        printf("\n\nMENU ALTERACAO PRODUTO");
+                        printf("\n1 - ALTERAR CODIGO");
+                        printf("\n2 - ALTERAR NOME DO PRODUTO");
+                        printf("\n3 - ALTERAR PRECO");
+                        printf("\n4 - ALTERAR TUDO");
+                        printf("\n5 - ESCOLHER OUTRO PRODUTO");
+                        printf("\n0 - SAIR DO MENU ALTERACAO");
+                        printf("\nOPCAO: ");
                         fflush(stdin);
-                        gets(produtos[meio].descricao);
-                        break;
+                        opcao = getchar();
                         
-                    case '3':
-                    case '4':
+                        if((opcao == '1') || (opcao == '4')){
+                                printf("\nNovo codigo: ");
+                                scanf("%d", &produtos[meio].codigo);
+                        }
                         
-                        printf("\nNovo preco: ");
-                        scanf("%f", &produtos[meio].valor);
-                        break;
-                        
-                    case '4':
-                        
-                        break;
-                        
-                    case '5':
-                        
-                        break;
-                        
-                    case '6':
-                        
-                        break;
-                }
-                
-                
-                break;
+                        if((opcao == '2') || (opcao == '4')){
+                            if(opcao == '2')
+                                printf("\n");
+                            printf("Nova descricao: ");
+                            fflush(stdin);
+                            gets(produtos[meio].descricao);
+                        }
+                            
+                        if((opcao == '3') || (opcao == '4')){
+                            printf("\nNovo preco: ");
+                            scanf("%f", &produtos[meio].valor);
+                        }
+                    } else {
+                        printf("\n\nNENHUM PRODUTO ENCONTRADO!");
+                    }
+                }while(opcao == '0');
                 
             case '4':
-                //excluir
-                
+                do{
+                    system("clear");
+                    //excluir
+                    printf("\n\nEXCLUIR PRODUTO");
+                    printf("\nINFORME O CODIGO DO PRODUTO: ");
+                    scanf("%d", &codigoEscolha);
+                    
+                    do{
+                    //algoritmo pesquisa binária
+                        inicio = 0;
+                        fim = (qtdProdutos - 1);
+                        meio = (inicio + fim) / 2;
+                        flag = 'o';
+                        
+                        if(codigoEscolha == produtos[meio].codigo){
+                            flag = 'x';
+                        } else if(codigoEscolha < produtos[meio].codigo){
+                            inicio = 0;
+                            fim = meio - 1;
+                            meio = (inicio + fim) / 2;
+                        } else {
+                            inicio = meio + 1;
+                            fim = (qtdProdutos - 1);
+                            meio = (inicio + fim) / 2;
+                        }
+                    }while((inicio <= fim) && (flag == 'o'));
+                    
+                    if(flag == 'x'){
+                        printf("\n\n%-6s  %-20s  %-12s", "Codigo", "Descricao", "Preco(R$)");
+                        printf("\n%06d  %-20s  %9.2f", produtos[meio].codigo, produtos[meio].descricao, produtos[meio].valor);
+                        
+                        printf("\nCONFIRMAR EXLUSAO? (s - sim)");
+                        printf("\nOPCAO: ");
+                        fflush(stdin);
+                        opcao = getchar();
+                        if((opcao == 's') || (opcao == 'S')){
+                            for(indice = meio; indice < qtdProdutos - 1; indice++){
+                                produtos[indice] = produtos[indice + 1];
+                                produtos[indice].codigo = produtos[indice + 1].codigo;
+                                strcpy(produtos[indice].descricao, produtos[indice + 1].descricao);
+                                produtos[indice].valor = produtos[indice + 1].valor;
+                            }
+                            qtdProdutos--;
+                        } else {
+                            opcao = '0';
+                        }
+                    } else {
+                        printf("\n\nNENHUM PRODUTO ENCONTRADO!");
+                    }
+                }while(opcao == '0');
                 break;
                 
                 
