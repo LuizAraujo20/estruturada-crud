@@ -10,18 +10,106 @@
 
 struct tProdutos{
     int codigo;
-    char descricao[20];
-    float valor;
-}
+    char nome[20];
+    float preco;
+};
 
 int main(int argc, const char * argv[]) {
+//declaracoes
+    FILE *arq;
+    struct tProdutos produto;
+//    int indice;
+    char opcao = 'a';
     
+//instrucoes
     //menu
-        //incluir
+    printf("  SGP - SISTEMA GERENCIADOR DE PRODUTOS \n");
+    
+    do{
+        printf("\n-> MENU PRINCIPAL");
+        printf("\n\t1) INCLUIR");
+        printf("\n\t2) LISTAR TUDO");
+        printf("\n\t3) PESQUISAR");
+        printf("\n\t4) ALTERAR");
+        printf("\n\t5) EXCLUIR");
+        printf("\n\t0) SAIR\n");
+        
+        printf("\nOPCAO: \n");
+        fflush(stdin);
+        scanf("%c", &opcao);
+    
+        switch(opcao){
+            case '1':
+            //incluir
                 
-        //listar
                 
-        //pesquisar
+                modularizar
                 
-        //alterar
+                
+                
+                printf("\n\n\n");
+                printf("--> INCLUIR PRODUTO");
+                
+                receberProduto(&produto, );
+                printf("\nCODIGO: ");
+                scanf("%d", &produto.codigo);
+                printf("NOME  : ");
+                fflush(stdin);
+                gets(produto.nome);
+                printf("PRECO : ");
+                scanf("%f", &produto.preco);
+                
+                arq = fopen("db_produtos.dat", "ab");
+                
+                if(arq == NULL){
+                    printf("\n\n");
+                    printf("ERRO AO ABRIR O ARQUIVO!");
+                    fclose(arq);
+                    printf("\n\n");
+                } else {
+                    fwrite(&produto, sizeof(produto), 1, arq);
+                    fclose(arq);
+                }
+                
+                break;
+                
+            case '2':
+            //listar tudo
+                printf("\n\n\n");
+                printf("--> LISTAR TUDO \n");
+                printf("\n%-6s %-20s %-12s", "CODIGO", "NOME", "PRECO(R$)");
+                
+                arq = fopen("db_produtos.dat","rb");
+                
+                while(fread(&produto, sizeof(produto),1,arq)){
+                    printf("\n%06d %-20s %9.2f", produto.codigo, produto.nome, produto.preco);
+                }
+                
+                fclose(arq);
+                
+                printf("\n\n\n");
+                break;
+                
+            case '3':
+            //pesquisar
+                printf("\n\n\n");
+                break;
+                
+            case '4':
+            //alterar
+                printf("\n\n\n");
+                break;
+                
+            case '5':
+            //excluir
+                printf("\n\n\n");
+                break;
+                
+            case '0':
+            //sair precisa??????????
+                printf("\n\n\n");
+                break;
+        
+        }//fim switch: opcoes menu principal
+    }while(opcao != '0');//do usuario menu principal
 }
