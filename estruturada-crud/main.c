@@ -13,6 +13,7 @@
 
 //DECLARAÇÃO DE TIPOS
 struct tProdutos{
+    char deletado;
     int codigo;
     char nome[20];
     float preco;
@@ -21,8 +22,10 @@ struct tProdutos{
 //PROTÓTIPOS
 void mostrarProduto(int pos); //recebe a posicao do produto no arquivo
 void incluirProduto(void);
+int receberCodigo(void);
 int pesquisarProduto(void);
-void alterarProduto(void);
+void alterarProduto(int cod);
+void excluirProduto(int cod);
 
 int main(int argc, const char * argv[]) {
 //declaracoes
@@ -30,7 +33,7 @@ int main(int argc, const char * argv[]) {
     struct tProdutos produto;
 //    int indice;
     char opcao = 'a', opcaoPosPesquisa = ' ';
-    int posicaoProduto;
+    int posicaoProduto, cod;
     
 //instrucoes
     //menu
@@ -66,8 +69,9 @@ int main(int argc, const char * argv[]) {
                 
                 arq = fopen(DB_PRODUTOS,"rb");
                 
-                while(fread(&produto, sizeof(produto),1,arq)){
-                    printf("\n%06d %-20s %9.2f", produto.codigo, produto.nome, produto.preco);
+                while((fread(&produto, sizeof(produto),1,arq))){
+                    if(produto.deletado != '*')
+                        printf("\n%06d %-20s %9.2f", produto.codigo, produto.nome, produto.preco);
                 }
                 
                 fclose(arq);
@@ -81,7 +85,7 @@ int main(int argc, const char * argv[]) {
                     
                     //procura
                     
-                    posicaoProduto = pesquisarProduto();
+                    cod = pesquisarProduto();
                     
                     if(posicaoProduto == -1){
                         printf("\n\nProduto nao encontrado\n");
@@ -104,11 +108,11 @@ int main(int argc, const char * argv[]) {
                         switch(opcaoPosPesquisa){
                             case '1':
                 //                FUNCAO DE ALTERAR
-                                
+                                alterarProduto(cod);
                                 break;
                             case '2':
                 //                FUNCAO DE EXCLUIR
-                                
+                                excluirProduto(cod);
                                 break;
                 //            default:
                             case '0':
@@ -123,13 +127,14 @@ int main(int argc, const char * argv[]) {
             case '4':
             //alterar
                 printf("\n\n\n");
-                alterarProduto();
+                alterarProduto(cod);
                 printf("\n\n\n");
                 break;
                 
             case '5':
             //excluir
                 printf("\n\n\n");
+                excluirProduto(cod);
                 printf("\n\n\n");
                 break;
                 
@@ -145,15 +150,13 @@ int main(int argc, const char * argv[]) {
 
 
 
-void mostrarProduto(int pos){
+void mostrarProduto(int cod){
     struct tProdutos prod;
-    int temp = 0;
     FILE *arq = fopen(DB_PRODUTOS, "rb");
-//    fseek(arq, (sizeof(prod) * 3), SEEK_CUR);
     while(fread(&prod, sizeof(prod), 1, arq)){
-        temp++;
-        if(pos == temp){
+        if((prod.codigo == cod) && (prod.deletado == ' ')) {
             printf("\nCODIGO : %06d", prod.codigo);
+            printf("\nDElETADO : %c", prod.deletado);
             printf("\nPRODUTO: %s", prod.nome);
             printf("\nPRECO  : %.2f", prod.preco);
         }
@@ -174,7 +177,7 @@ void incluirProduto(){
 
     while(fread(&prod, sizeof(prod), 1, arq)){
         ultimoCodigo = prod.codigo + 1;
-        printf("\n\n\n\nultimoCodigo+ 1\n\n\n");
+//        printf("\n\n\n\nultimoCodigo+ 1\n\n\n");
 //        ultimoCodigo++;
     }
     fclose(arq);//tive que separar read do append, pois não tava "reading" mesmo com a+b
@@ -182,6 +185,8 @@ void incluirProduto(){
     
     printf("\nCODIGO: %d", ultimoCodigo);
     prod.codigo = ultimoCodigo;
+    
+    prod.deletado = ' ';
     printf("\nNOME: ");
     fflush(stdin);
     gets(prod.nome);
@@ -197,13 +202,19 @@ void incluirProduto(){
 }
 
 
+// Receber codigo ******************************************************************
+int receberCodigo(void) {
+    int codigo;
+    printf("Digite o codigo...: ");
+    scanf("%d", &codigo);
+    return codigo;
+}
+
 
 int pesquisarProduto(){
-    FILE *file = fopen(DB_PRODUTOS, "rb");
     struct tProdutos prod;
-    int chavePesquisaCodigo = 0;
 //    int chavePesquisa = 0;
-    int contadorRegistros = 0, posicao = -1;
+    int cod;
     char opcao = ' ';
     
     //MENU PESQUISA
@@ -221,18 +232,23 @@ int pesquisarProduto(){
         case '1':
             //PESQUISAR POR CODIGO
             printf("\nINFORME O CODIGO: ");
-            scanf("%d", &chavePesquisaCodigo);
+            scanf("%d", &cod);
             
-            //pesquisa a posicao do código solicitado
-//            do{
-//                posicao++;
-//            }while((fread(&prod,sizeof(prod), 1, file)) && (prod.codigo != chavePesquisaCodigo));
-            while((fread(&prod,sizeof(prod), 1, file))){
-                contadorRegistros++;
-                if(prod.codigo == chavePesquisaCodigo)
-                    posicao = contadorRegistros;
+            int achei=0;
+            FILE *arq = fopen(DB_PRODUTOS, "rb");
+            if (arq == NULL) {
+                printf("Erro de abertura!");
+                return -1;
             }
-            
+            while (fread(&prod, sizeof(prod), 1, arq)) {
+                if ((prod.codigo == cod) && (prod.deletado != '*')) {
+                    mostrarProduto(cod);
+                    achei = 1;
+                }
+            }
+            if (!achei)
+                printf("Codigo nao encontrado!!!\n\n");
+            fclose(arq);
             break;
             
         case '2':
@@ -247,100 +263,64 @@ int pesquisarProduto(){
             break;
     }
     
-    return posicao;
+    return cod;
 }
 
-void alterarProduto(){
+void alterarProduto(int cod){
     struct tProdutos prod;
-//    int ultimoCodigo = 0;
-//    char opcao = 's';
+    int achei=0;
+    FILE *arq = fopen(DB_PRODUTOS, "r+b");
+    if (arq == NULL) {
+        printf("Erro de abertura!");
+        return;
+    }
+    cod = receberCodigo();
     
-    //AUTOINCREMENT COD
-    int posicaoProduto, temp = 0;
-//    arq = fopen("bd_produtos.dat", "rb");
-
-//    while(fread(&prod, sizeof(prod), 1, arq)){
-//        ultimoCodigo = prod.codigo + 1;
-//        printf("\n\n\n\nultimoCodigo+ 1\n\n\n");
-////        ultimoCodigo++;
-//    }
-//    fclose(arq);//tive que separar read do append, pois não tava "reading" mesmo com a+b
-    
-    
-    printf("\n\nALTERAR PRODUTO\n\n");
-    
-    posicaoProduto = pesquisarProduto();
-    
-    
-    
-    
-    
-//    if(posicaoProduto > -1){
-        //menu após pesquisa
-        
-        printf("\n\n");
-        mostrarProduto(posicaoProduto);
-        printf("\n");
-        
-//        printf("\nCONFIRMAR ALTERACAO? (s - sim)");
-//        printf("\nOPCAO: ");
-//        fflush(stdin);
-//        char confirmarAlteracao;
-//        scanf("%c", &confirmarAlteracao);
-//        if(confirmarAlteracao == 's' || confirmarAlteracao == 'S'){
-//
-//        }
-        
-        
-        
-//    }
-//}while(opcaoPosPesquisa == '3'); // 3 é para pesquisar novo produto
-    
-    
-    
-
-    
-    
-    printf("\nALTERACAO PRODUTO");
-    
-    FILE *arq = fopen(DB_PRODUTOS, "rb");
-    while(fread(&prod, sizeof(prod), 1, arq)){
-        temp++;
-        if(posicaoProduto == temp){
-            printf("\nCODIGO : %06d", prod.codigo);
+    while (fread(&prod, sizeof(prod), 1, arq)) {
+        if ((prod.codigo == cod) && (prod.deletado != '*')) {
+            mostrarProduto(cod);
+            achei = 1;
+//            receberProduto(&prod);
+            printf("\nNOME: ");
+            fflush(stdin);
+            gets(prod.nome);
+            printf("PRECO : ");
+            scanf("%f", &prod.preco);
+            
+            fseek(arq, (sizeof(prod) * -1), SEEK_CUR);
+            fwrite(&prod, sizeof(prod), 1, arq);
+            fseek(arq, 0, SEEK_CUR); // ATENCAO = foi colocado devido ao ponteiro ficar perdido entre leitura e grava��o. NAO REMOVA ESTA LINHA!
         }
     }
-    fclose(arq);
-    
-    printf("\nNOVO NOME: ");
-    fflush(stdin);
-    gets(prod.nome);
-    printf("NOVO PRECO : ");
-    scanf("%f", &prod.preco);
-    
-    if(posicaoProduto > 0)
-        posicaoProduto--;
-    
-    arq = fopen(DB_PRODUTOS, "ab");
-    
-    
-    if(arq != NULL){
-        while(fread(&prod, sizeof(prod), 1, arq)){
-            temp++;
-            if(posicaoProduto  == temp){
-                arrumar o alterar
-                fwrite(&prod, sizeof(prod), 1, arq);
-            }
-        }
-    //SALVAR NO ARQUIVO
-    } else {
-        printf("ERRO AO SALllllllVAR");
-    }
-    
+    if (!achei)
+        printf("Codigo nao encontrado!!!\n\n");
     fclose(arq);
 }
 
-
+void excluirProduto(int cod) {
+    struct tProdutos prod;
+    int achei=0;
+    FILE *arq = fopen(DB_PRODUTOS, "r+b");
+    if (arq == NULL) {
+        printf("Erro de abertura!");
+        return;
+    }
+    cod = receberCodigo();
+    while (fread(&prod, sizeof(prod), 1, arq)) {
+        if ((prod.codigo == cod) && (prod.deletado != '*')) {
+            mostrarProduto(cod);
+            achei = 1;
+            prod.deletado = '*';
+            fseek(arq, (sizeof(prod) * -1), SEEK_CUR);
+            fwrite(&prod, sizeof(prod), 1, arq);
+//            fseek(arq, 0, SEEK_CUR); // ATENCAO = foi colocado devido ao ponteiro ficar perdido entre leitura e grava��o. NAO REMOVA ESTA LINHA!
+            printf("Excluido com sucesso!\n");
+        }
+    }
+    if (!achei)
+        printf("Codigo nao encontrado!!!\n\n");
+    fclose(arq);
+}
 
 
 
