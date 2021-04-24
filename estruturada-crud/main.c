@@ -8,319 +8,255 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define DB_PRODUTOS "bd_produtos.dat"
+//#define DB_PRODUTOS "bd_produtos.dat"
 
-
-//DECLARAÇÃO DE TIPOS
-struct tProdutos{
-    char deletado;
+//DECLARACAO DE TIPO
+struct tProduto {
+    char deletado; //deletado == '*'
     int codigo;
     char nome[20];
     float preco;
 };
 
 //PROTÓTIPOS
-void mostrarProduto(int pos); //recebe a posicao do produto no arquivo
-void incluirProduto(void);
-int receberCodigo(void);
-int pesquisarProduto(void);
-void alterarProduto(int cod);
-void excluirProduto(int cod);
+char menu(void);
+FILE *abrirArquivo(char[]);
+int consultarUltimoCodigo(FILE*);
+void gravarProduto(struct tProduto, int, FILE*);
+void listarProdutos(FILE*);
+int consultarProduto(int, FILE*);
+void excluirProduto(int, FILE*);
+struct tProduto lerProduto(int, FILE*);
+void excluirFisicamenteProduto(FILE**, char[]);
+void excluirCadastroProdutos(FILE**, char[]);
 
-int main(int argc, const char * argv[]) {
-//declaracoes
-    FILE *arq;
-    struct tProdutos produto;
-//    int indice;
-    char opcao = 'a', opcaoPosPesquisa = ' ';
-    int posicaoProduto, cod;
+int main(void) {
+    int codigo, pos;
+    char opcao;
+    struct tProduto produto;
+    FILE *arqProduto = abrirArquivo("produtos.dat");
     
-//instrucoes
-    //menu
-    printf("  SGP - SISTEMA GERENCIADOR DE PRODUTOS \n");
-    
-    do{
-        printf("\n-> MENU PRINCIPAL");
-        printf("\n\t1) INCLUIR");
-        printf("\n\t2) LISTAR TUDO");
-        printf("\n\t3) PESQUISAR");
-        printf("\n\t4) ALTERAR");
-        printf("\n\t5) EXCLUIR");
-        printf("\n\t0) SAIR\n");
+    if (arqProduto == NULL) {
+        printf("ERRO de abertura do arquivo de produtos!");
+        return 1;
+    }
+    printf("SGP - SISTEMA DE GERENCIAMENTO DE PRODUTOS\n");
+    do {
         
-        printf("\nOPCAO: ");
-        fflush(stdin);
-        scanf("%c", &opcao);
-    
-        switch(opcao){
-            case '1':
-            //incluir
-                printf("\n\n\n");
-                printf("--> INCLUIR PRODUTO");
+        opcao = menu();
+        switch (opcao) {
+               case '1':
+                    printf("\n\nCADASTRAR PRODUTO\n\n");
                 
-                incluirProduto();
-                break;
+                    codigo = consultarUltimoCodigo(arqProduto);
                 
-            case '2':
-            //listar tudo
-                printf("\n\n\n");
-                printf("--> LISTAR TUDO \n");
-                printf("\n%-6s %-20s %-12s", "CODIGO", "NOME", "PRECO(R$)");
+                    printf("CODIGO: %06d", codigo  + 1);
+                    produto.codigo = codigo + 1;
                 
-                arq = fopen(DB_PRODUTOS,"rb");
-                
-                while((fread(&produto, sizeof(produto),1,arq))){
-                    if(produto.deletado != '*')
-                        printf("\n%06d %-20s %9.2f", produto.codigo, produto.nome, produto.preco);
-                }
-                
-                fclose(arq);
-                printf("\n\n\n");
-                break;
-                
-            case '3':
-                do{
-                //pesquisar
-                    printf("\n\n\n");
-                    
-                    //procura
-                    
-                    cod = pesquisarProduto();
-                    
-                    if(posicaoProduto == -1){
-                        printf("\n\nProduto nao encontrado\n");
-                        
-                    }else{
-                        //menu após pesquisa
-                        
-                        printf("\n\n");
-                        mostrarProduto(posicaoProduto);
-                        printf("\n");
-                        
-                        printf("\nO QUE DESEJA FAZER COM O PRODUTO ENCONTRADO? ");
-                        printf("\n\t1) ALTERAR");
-                        printf("\n\t2) EXCLUIR");
-                        printf("\n\t3) PESQUISAR OUTRO PRODUTO");
-                        printf("\n\t0) SAIR DA PESQUISA\n");
-                        printf("\nOPCAO: ");
-                        fflush(stdin);
-                        scanf("%c", &opcaoPosPesquisa);
-                        switch(opcaoPosPesquisa){
-                            case '1':
-                //                FUNCAO DE ALTERAR
-                                alterarProduto(cod);
-                                break;
-                            case '2':
-                //                FUNCAO DE EXCLUIR
-                                excluirProduto(cod);
-                                break;
-                //            default:
-                            case '0':
-                                //sair ok
-                                break;
-                        }
+                    printf("\nNOME: ");
+                    fflush(stdin);
+                    gets(produto.nome);
+                    printf("PRECO: R$ ");
+                    scanf("%f", &produto.preco);
+                    gravarProduto(produto, -1, arqProduto);
+                    break;
+               case '2':
+                    printf("\n\nLISTA COMPLETA\n\n");
+                    listarProdutos(arqProduto);
+                    break;
+               case '3':
+                    printf("\n\nCONSULTAR PRODUTO\n");
+                printf("\nInforme o codigo: ");
+                    scanf("%d", &codigo);
+                    pos = consultarProduto(codigo, arqProduto);
+                    if (pos > 0) {
+                        produto = lerProduto(pos, arqProduto);
+//                        printf("CODIGO: %d\n",  produto.codigo);
+                        printf("DESCRICAO: %s\n",  produto.nome);
+                        printf("PRECO    : R$ %.2f\n", produto.preco);
                     }
-                }while(opcaoPosPesquisa == '3'); // 3 é para pesquisar novo produto
-    //                printf("\n\n\n");
-                break;
+                    else
+                        printf("CODIGO NAO ENCONTRADO!\n");
+                    printf("\n\n");
+                    break;
+               case '4':
+                    printf("\n\nALTERAR PRODUTO\n\n");
+                    printf("\nInforme o codigo: ");
+                    scanf("%d", &codigo);
+                    pos = consultarProduto(codigo, arqProduto);
+                    if (pos > 0) {
+                        produto = lerProduto(pos, arqProduto);
+                        printf("DESCRICAO: %s\n", produto.nome);
+                        printf("Novo nome: ");
+                        fflush(stdin);
+                        gets(produto.nome);
+                        printf("PRECO: R$ %.2f\n", produto.preco);
+                        printf("Novo preco: R$ ");
+                        scanf("%f", &produto.preco);
+                        gravarProduto(produto, pos, arqProduto);
+                        printf("\nPRODUTO ALTERADO COM SUCESSO.\n");
+                    }
+                    else
+                        printf("CODIGO NAO ENCONTRADO!\n\n");
                 
-            case '4':
-            //alterar
-                printf("\n\n\n");
-                alterarProduto(cod);
-                printf("\n\n\n");
-                break;
-                
-            case '5':
-            //excluir
-                printf("\n\n\n");
-                excluirProduto(cod);
-                printf("\n\n\n");
-                break;
-                
-            case '0':
-            //sair precisa??????????
-                printf("\n\n\n");
-                return 0;
-                break;
-        
-        }//fim switch: opcoes menu principal
-    }while(1);//do usuario menu principal
-}
-
-
-
-void mostrarProduto(int cod){
-    struct tProdutos prod;
-    FILE *arq = fopen(DB_PRODUTOS, "rb");
-    while(fread(&prod, sizeof(prod), 1, arq)){
-        if((prod.codigo == cod) && (prod.deletado == ' ')) {
-            printf("\nCODIGO : %06d", prod.codigo);
-            printf("\nDElETADO : %c", prod.deletado);
-            printf("\nPRODUTO: %s", prod.nome);
-            printf("\nPRECO  : %.2f", prod.preco);
+                    break;
+               case '5':
+                    printf("\n\nEXCLUIR PRODUTO\n\n");
+                    printf("Digite o codigo...: ");
+                    scanf("%d", &codigo);
+                    pos = consultarProduto(codigo, arqProduto);
+                    if (pos > 0)
+                        excluirProduto(pos, arqProduto);
+                    else
+                        printf("CODIGO NAO ENCONTRADO!\n\n");
+                    break;
+                case '6':
+                     printf("\n\nESVAZIAR LIXEIRA COM PRODUTOS EXCLUIDOS\n\n");
+                     excluirFisicamenteProduto(&arqProduto, "produtos.dat");
+                    break;
+                case '7':
+                     printf("\n\nESVAZIAR CADASTRO\n\n");
+                     excluirCadastroProdutos(&arqProduto,"produtos.dat");
         }
-    }
-        
-    
-    fclose(arq);
-}
-
-void incluirProduto(){
-    struct tProdutos prod;
-    int ultimoCodigo = 0;
-//    char opcao = 's';
-    
-    //AUTOINCREMENT COD
-    FILE *arq;
-    arq = fopen(DB_PRODUTOS, "rb");
-
-    while(fread(&prod, sizeof(prod), 1, arq)){
-        ultimoCodigo = prod.codigo + 1;
-//        printf("\n\n\n\nultimoCodigo+ 1\n\n\n");
-//        ultimoCodigo++;
-    }
-    fclose(arq);//tive que separar read do append, pois não tava "reading" mesmo com a+b
-    arq = fopen(DB_PRODUTOS, "ab");
-    
-    printf("\nCODIGO: %d", ultimoCodigo);
-    prod.codigo = ultimoCodigo;
-    
-    prod.deletado = ' ';
-    printf("\nNOME: ");
-    fflush(stdin);
-    gets(prod.nome);
-    printf("PRECO : ");
-    scanf("%f", &prod.preco);
-    
-    //SALVAR NO ARQUIVO
-    if(arq != NULL){
-        fwrite(&prod, sizeof(prod), 1, arq);
-    }
-    
-    fclose(arq);
+    } while(opcao != '0');
+    fclose(arqProduto);
+    return 0;
 }
 
 
-// Receber codigo ******************************************************************
-int receberCodigo(void) {
-    int codigo;
-    printf("Digite o codigo...: ");
-    scanf("%d", &codigo);
-    return codigo;
-}
-
-
-int pesquisarProduto(){
-    struct tProdutos prod;
-//    int chavePesquisa = 0;
-    int cod;
-    char opcao = ' ';
-    
-    //MENU PESQUISA
-    
-    printf("\n---> PESQUISAR POR:");
-    printf("\n\t1) CODIGO");
-//    printf("\n\t2) NOME");
-//    printf("\n\t3) PRECO");
-    printf("\n\t0) SAIR\n");
+char menu(void) {
+    char opc;
+    printf("\nMENU PRINCIPAL");
+    printf("\n1) CADASTRAR PRODUTO");
+    printf("\n2) LISTA COMPLETA");
+    printf("\n3) CONSULTAR PRODUTO");
+    printf("\n4) ALTERAR PRODUTO");
+    printf("\n5) EXCLUIR PRODUTO");
+    printf("\n6) ESVAZIAR LIXEIRA");
+    printf("\n7) EXCLUIR TODO CADASTRO");
+    printf("\n0) SAIR");
     printf("\nOPCAO: ");
     fflush(stdin);
-    scanf("%c", &opcao);
+    scanf("%c", &opc);
+    return opc;
+}
 
-    switch(opcao){
-        case '1':
-            //PESQUISAR POR CODIGO
-            printf("\nINFORME O CODIGO: ");
-            scanf("%d", &cod);
-            
-            int achei=0;
-            FILE *arq = fopen(DB_PRODUTOS, "rb");
-            if (arq == NULL) {
-                printf("Erro de abertura!");
-                return -1;
-            }
-            while (fread(&prod, sizeof(prod), 1, arq)) {
-                if ((prod.codigo == cod) && (prod.deletado != '*')) {
-                    mostrarProduto(cod);
-                    achei = 1;
-                }
-            }
-            if (!achei)
-                printf("Codigo nao encontrado!!!\n\n");
-            fclose(arq);
-            break;
-            
-        case '2':
-            //PESQUISAR POR NOME
-//            int codigoPesquisa = 0;
-            break;
-        case '3':
-//            PESQUISAR POR PRECO
-            break;
-        case '0':
-            //SAIR
-            break;
-    }
+
+FILE *abrirArquivo(char arquivo[]) {
+    FILE *arq = fopen(arquivo, "r+b");
+    if (arq == NULL)
+        arq = fopen(arquivo, "w+b");
+    return arq;
+}
+
+
+
+int consultarUltimoCodigo(FILE *arq){
+    struct tProduto prod;
+    int cod = 0, cont = 0;
     
+    fseek(arq, 0, SEEK_SET);
+    
+    while(fread(&prod,sizeof(prod),1,arq)){
+        cod = prod.codigo;
+        cont++;
+    }
     return cod;
 }
 
-void alterarProduto(int cod){
-    struct tProdutos prod;
-    int achei=0;
-    FILE *arq = fopen(DB_PRODUTOS, "r+b");
-    if (arq == NULL) {
-        printf("Erro de abertura!");
-        return;
+// reg <= 0 grava no final do arquivo
+void gravarProduto(struct tProduto prod, int reg, FILE *arq) {
+    if (reg <= 0) {
+        prod.deletado = ' ';
+        fseek(arq, 0, SEEK_END);
     }
-    cod = receberCodigo();
-    
-    while (fread(&prod, sizeof(prod), 1, arq)) {
-        if ((prod.codigo == cod) && (prod.deletado != '*')) {
-            mostrarProduto(cod);
-            achei = 1;
-//            receberProduto(&prod);
-            printf("\nNOME: ");
-            fflush(stdin);
-            gets(prod.nome);
-            printf("PRECO : ");
-            scanf("%f", &prod.preco);
-            
-            fseek(arq, (sizeof(prod) * -1), SEEK_CUR);
-            fwrite(&prod, sizeof(prod), 1, arq);
-            fseek(arq, 0, SEEK_CUR); // ATENCAO = foi colocado devido ao ponteiro ficar perdido entre leitura e grava��o. NAO REMOVA ESTA LINHA!
-        }
-    }
-    if (!achei)
-        printf("Codigo nao encontrado!!!\n\n");
-    fclose(arq);
+    else
+        fseek(arq, (reg-1)*sizeof(prod), SEEK_SET);
+    fwrite(&prod, sizeof(prod), 1, arq);
 }
 
-void excluirProduto(int cod) {
-    struct tProdutos prod;
-    int achei=0;
-    FILE *arq = fopen(DB_PRODUTOS, "r+b");
-    if (arq == NULL) {
-        printf("Erro de abertura!");
+
+void listarProdutos(FILE *arq) {
+    struct tProduto prod;
+    fseek(arq, 0, SEEK_SET);
+       printf(" COD   DESCRICAO            VALOR(R$)\n");
+       printf("----- -------------------- ----------\n");
+    while (fread(&prod, sizeof(prod), 1, arq))
+        if (prod.deletado != '*')
+            printf("%05d %-20s %10.2f\n", prod.codigo, prod.nome, prod.preco);
+}
+
+
+int consultarProduto(int cod, FILE *arq) {
+    struct tProduto prod;
+    int reg=0;
+    fseek(arq, 0, SEEK_SET);
+    while (fread(&prod, sizeof(prod), 1, arq)) {
+        reg++;
+        if ((prod.codigo == cod) && (prod.deletado != '*'))
+            return reg;
+    }
+    return -1;
+}
+
+
+struct tProduto lerProduto(int reg, FILE *arq) {
+    struct tProduto prod;
+    fseek(arq, (reg-1)*sizeof(prod), SEEK_SET);
+    fread(&prod, sizeof(prod), 1, arq);
+     return prod;
+}
+
+
+void excluirProduto(int reg, FILE *arq) {
+    struct tProduto prod;
+    fseek(arq, (reg-1)*sizeof(prod), SEEK_SET);
+    fread(&prod, sizeof(prod), 1, arq);
+    prod.deletado = '*';
+    fseek(arq, -sizeof(prod), SEEK_CUR);
+    fwrite(&prod, sizeof(prod), 1, arq);
+    printf("\nPRODUTO EXCLUIDO COM SUCESSO.\n");
+}
+
+
+void excluirFisicamenteProduto(FILE **arq, char arquivo[]) {
+    struct tProduto prod;
+    FILE *arqAux = fopen("produtos.aux", "wb");
+    if (arqAux == NULL)
+        printf("\nERRO AO ESVAZIAR LIXEIRA.\n");
+        return;
+    fseek(*arq, 0, SEEK_SET);
+    while (fread(&prod, sizeof(prod), 1, *arq))
+        if (prod.deletado != '*')
+            fwrite(&prod, sizeof(prod), 1, arqAux);
+    fclose(*arq);
+    fclose(arqAux);
+    remove(arquivo);
+    rename("produtos.aux", arquivo);
+    *arq = abrirArquivo(arquivo);
+    printf("\nPRODUTOS EXCLUIDOS APAGADOS COM SUCESSO.\n");
+}
+
+void excluirCadastroProdutos(FILE **arq, char arquivo[]) {
+    FILE *arqAux = fopen("produtos.aux", "wb");
+    if (arqAux == NULL){
+        printf("\nERRO AO EXCLUIR TODO O CADASTRO.\n");
         return;
     }
-    cod = receberCodigo();
-    while (fread(&prod, sizeof(prod), 1, arq)) {
-        if ((prod.codigo == cod) && (prod.deletado != '*')) {
-            mostrarProduto(cod);
-            achei = 1;
-            prod.deletado = '*';
-            fseek(arq, (sizeof(prod) * -1), SEEK_CUR);
-            fwrite(&prod, sizeof(prod), 1, arq);
-//            fseek(arq, 0, SEEK_CUR); // ATENCAO = foi colocado devido ao ponteiro ficar perdido entre leitura e grava��o. NAO REMOVA ESTA LINHA!
-            printf("Excluido com sucesso!\n");
-        }
-    }
-    if (!achei)
-        printf("Codigo nao encontrado!!!\n\n");
-    fclose(arq);
+    fclose(*arq);
+    fclose(arqAux);
+    remove(arquivo);
+    rename("produtos.aux", arquivo);
+    *arq = abrirArquivo(arquivo);
+    printf("\nCADASTRO EXCLUIDO COM SUCESSO.\n");
 }
+
+
+
+
+
+
+
 
 
 
