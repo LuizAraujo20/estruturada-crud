@@ -1,0 +1,7 @@
+
+*.pbxproj
+*.xcworkspacedata
+jogos/jogos/main.c
+*.plist
+jogos/jogos/main.c
+cinemark/cinemark/main.c

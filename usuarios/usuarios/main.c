@@ -1,6 +1,6 @@
 //
 //  main.c
-//  estruturada-crud-usuario
+//  estruturada-crud-usuário
 //
 //  Created by Luiz on 06/04/21.
 
@@ -10,11 +10,22 @@
 
 //DECLARACAO DE TIPO
 struct tUsuario {
-    char deletado; //deletado == '*'
     int id;
-    char nome[20];
-    float preco;
+    char nivel;
+    char nome[50];
+    char nascimento[11];
+    char login[20];
+    char senha[15];
+    int quantidadeCatalogo;
+    char deletado; //deletado == '*'
 };
+
+struct tLogin {
+    char estado; // 1 == logado
+    char login[20];
+    char nivel; // só depois de confirmar senha
+    
+} logado;
 
 //PROTÓTIPOS
 char menu(void);
@@ -28,17 +39,21 @@ struct tUsuario lerUsuario(int, FILE*);
 void excluirFisicamenteUsuario(FILE**, char[]);
 void excluirCadastroUsuarios(FILE**, char[]);
 
-int main(void) {
+int main(void){
     int id, pos;
     char opcao;
     struct tUsuario usuario;
     FILE *arqUsuario = abrirArquivo("usuarios.dat");
     
     if (arqUsuario == NULL) {
-        printf("ERRO de abertura do arquivo de usuarios!");
+        printf("ERRO AO INICIAR!");
         return 1;
     }
     printf("SGP - SISTEMA DE GERENCIAMENTO DE USUARIOS\n");
+    if(logado.estado == 0){
+        //        tela de fazer signin
+        //        tela de fazer signup
+    }else if(logado.estado == 1){
     do {
         
         opcao = menu();
@@ -48,7 +63,8 @@ int main(void) {
                 
                     id = consultarUltimoId(arqUsuario);
                 
-                    printf("ID: %06d", id  + 1);
+                    if((logado.estado == 1) && (logado.nivel <= 1))
+                        printf("ID: %06d", id  + 1);
                     usuario.id = id + 1;
                 
                     printf("\nNOME: ");
@@ -57,10 +73,6 @@ int main(void) {
                     printf("PRECO: R$ ");
                     scanf("%f", &usuario.preco);
                     gravarUsuario(usuario, -1, arqUsuario);
-                    break;
-               case '2':
-                    printf("\n\nLISTA COMPLETA\n\n");
-                    listarUsuarios(arqUsuario);
                     break;
                case '3':
                     printf("\n\nCONSULTAR USUARIO\n");
@@ -115,23 +127,38 @@ int main(void) {
                 case '7':
                      printf("\n\nESVAZIAR CADASTRO\n\n");
                      excluirCadastroUsuarios(&arqUsuario,"usuarios.dat");
+                case '8':
+                     if((logado.estado == 1) && (logado.nivel <= 1)){
+                         printf("\n\nLISTA COMPLETA\n\n");
+                         listarUsuarios(arqUsuario);
+                     }
+                     break;
         }
     } while(opcao != '0');
+    
+        
+    }//fim if else logado
     fclose(arqUsuario);
     return 0;
 }
 
 
+//#############################################
+// CADASTRO DE USUARIOS
+//#############################################
+
 char menu(void) {
     char opc;
     printf("\nMENU PRINCIPAL");
     printf("\n1) CADASTRAR USUARIO");
-    printf("\n2) LISTA COMPLETA");
     printf("\n3) CONSULTAR USUARIO");
     printf("\n4) ALTERAR USUARIO");
     printf("\n5) EXCLUIR USUARIO");
     printf("\n6) ESVAZIAR LIXEIRA");
     printf("\n7) EXCLUIR TODO CADASTRO");
+    if(logado.nivel <= 1){
+        printf("\n8) LISTA COMPLETA");
+    }
     printf("\n0) SAIR");
     printf("\nOPCAO: ");
     fflush(stdin);
@@ -177,7 +204,7 @@ void gravarUsuario(struct tUsuario user, int reg, FILE *arq) {
 void listarUsuarios(FILE *arq) {
     struct tUsuario user;
     fseek(arq, 0, SEEK_SET);
-       printf(" ID   NOME            VALOR(R$)\n");
+       printf("ID    NOME                 QTD\n");
        printf("----- -------------------- ----------\n");
     while (fread(&user, sizeof(user), 1, arq))
         if (user.deletado != '*')
