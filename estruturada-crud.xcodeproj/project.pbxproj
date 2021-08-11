@@ -25,6 +25,7 @@
 /* Begin PBXFileReference section */
 		6F3C5E68261CB216006403CD /* estruturada-crud */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "estruturada-crud"; sourceTree = BUILT_PRODUCTS_DIR; };
 		6F3C5E6B261CB216006403CD /* main.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = main.c; sourceTree = "<group>"; };
+		6F51196A26588F7D008D3C94 /* produtos.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = produtos.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -58,6 +59,7 @@
 			isa = PBXGroup;
 			children = (
 				6F3C5E6B261CB216006403CD /* main.c */,
+				6F51196A26588F7D008D3C94 /* produtos.h */,
 			);
 			path = "estruturada-crud";
 			sourceTree = "<group>";
